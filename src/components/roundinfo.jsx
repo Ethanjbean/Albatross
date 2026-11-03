@@ -1,13 +1,37 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Home, PlusCircle, Trophy, BarChart3, User } from "lucide-react";
+import { Home, PlusCircle, Trophy, BarChart3, User, Pencil, Trash2 } from "lucide-react";
 import { API_URL } from '../config'
 
 export default function Roundinfo() {
     const [rounds, setRounds] = useState([])
     const [targets, setTargets] = useState({})
+    const [confirmingId, setConfirmingId] = useState(null) // round showing "Delete? Yes / No"
+    const [deletingId, setDeletingId] = useState(null)
+    const [deleteError, setDeleteError] = useState(null)
     const navigate = useNavigate()
+
+    const deleteRound = async (id) => {
+        setDeletingId(id)
+        setDeleteError(null)
+        try {
+            const res = await fetch(`${API_URL}/api/rounds/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+            })
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}))
+                throw new Error(body.error ?? `Delete failed (${res.status})`)
+            }
+            setRounds(prev => prev.filter(r => r.id !== id))
+            setConfirmingId(null)
+        } catch (err) {
+            setDeleteError(err.message)
+        } finally {
+            setDeletingId(null)
+        }
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -60,6 +84,7 @@ export default function Roundinfo() {
                 <div className="p-6 border-b border-line">
                     <h2 className="heading-augusta text-xl">Round History</h2>
                     <p className="text-sm text-muted mt-1">{rounds.length} rounds logged</p>
+                    {deleteError && <p className="text-sm text-danger mt-2">{deleteError}</p>}
                 </div>
 
                 <div className="overflow-x-auto">
@@ -73,12 +98,13 @@ export default function Roundinfo() {
                                 <th className="px-6 py-3 font-display font-medium uppercase tracking-wider">Fairways</th>
                                 <th className="px-6 py-3 font-display font-medium uppercase tracking-wider">G/R</th>
                                 <th className="px-6 py-3"><span className="sr-only">Scorecard</span></th>
+                                <th className="px-6 py-3"><span className="sr-only">Actions</span></th>
                             </tr>
                         </thead>
                         <tbody className="text-ink divide-y divide-line">
                             {rounds.length === 0 ? (
                                 <tr>
-                                    <td colSpan="7" className="px-6 py-8 text-center text-muted">
+                                    <td colSpan="8" className="px-6 py-8 text-center text-muted">
                                         No rounds logged yet
                                     </td>
                                 </tr>
@@ -118,6 +144,46 @@ export default function Roundinfo() {
         ) : (
             <span className="text-xs text-muted" title="Quick-logged rounds have no hole-by-hole data">
                 Quick log
+            </span>
+        )}
+    </td>
+    <td className="px-6 py-4 text-right whitespace-nowrap">
+        {confirmingId === round.id ? (
+            <span className="inline-flex items-center gap-3">
+                <span className="text-xs text-danger font-medium">Delete this round?</span>
+                <button
+                    className="text-sm font-semibold text-danger hover:underline disabled:opacity-50"
+                    onClick={() => deleteRound(round.id)}
+                    disabled={deletingId === round.id}
+                >
+                    {deletingId === round.id ? "Deleting..." : "Yes"}
+                </button>
+                <button
+                    className="text-sm text-muted hover:underline"
+                    onClick={() => setConfirmingId(null)}
+                    disabled={deletingId === round.id}
+                >
+                    No
+                </button>
+            </span>
+        ) : (
+            <span className="inline-flex items-center gap-1">
+                <button
+                    className="rounded-lg p-2 text-muted hover:bg-fairway-light hover:text-fairway-dark"
+                    onClick={() => navigate(`/rounds/${round.id}/edit`)}
+                    aria-label="Edit round"
+                    title="Edit round"
+                >
+                    <Pencil size={16} />
+                </button>
+                <button
+                    className="rounded-lg p-2 text-muted hover:bg-red-50 hover:text-danger"
+                    onClick={() => { setDeleteError(null); setConfirmingId(round.id) }}
+                    aria-label="Delete round"
+                    title="Delete round"
+                >
+                    <Trash2 size={16} />
+                </button>
             </span>
         )}
     </td>

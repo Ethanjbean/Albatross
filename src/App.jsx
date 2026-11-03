@@ -10,6 +10,7 @@ import Footer from "./components/Navbar";
 import Stats from "./components/Stats";
 import StartRound from "./components/Start-round";
 import RoundScorecard from "./components/RoundScorecard";
+import EditRound from "./components/EditRound";
 import Leaderboard from "./components/Leaderboard";
 import { Star } from "lucide-react";
 
@@ -63,6 +64,9 @@ export default function App(){
       }/>
       <Route path="/rounds/:id" element={
         user ? <RoundScorecard /> : <Navigate to="/" />
+      }/>
+      <Route path="/rounds/:id/edit" element={
+        user ? <EditRound /> : <Navigate to="/" />
       }/>
       <Route path="/roundinfo" element={
         user ? <Roundinfo /> : <Navigate to="/" />

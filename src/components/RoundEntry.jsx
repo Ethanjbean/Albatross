@@ -10,22 +10,55 @@ import { API_URL } from '../config'
  * button and editing the card always stay in sync.
  *
  * Stats are optional (trackStats toggle). Each hole starts at the presets in
- * defaultStats (2 putts, fairway hit, GIR, no penalty); `stats` only stores
+ * defaultStats (2 putts, fairway/GIR unselected, no penalty); `stats` only stores
  * what the user changed. Stats count toward totals once the hole has a score.
  *
  * Render with key={course id} so switching courses starts a fresh round.
+ *
+ * Edit mode: pass initialRound (the GET /api/rounds/:id response). The form
+ * starts filled in with that round and saving sends a PUT instead of a POST.
  */
-export default function RoundEntry({ course, courseId, osmName }) {
+
+// Saved round_holes rows -> { scores, stats } in the shapes this form uses.
+function stateFromHoles(roundHoles = []) {
+  const scores = {};
+  const stats = {};
+  for (const h of roundHoles) {
+    scores[h.hole_number] = h.strokes;
+    if (h.putts != null) {
+      stats[h.hole_number] = {
+        putts: h.putts,
+        fairway: h.fairway_hit,
+        gir: h.gir,
+        penalty: (h.penalties ?? 0) > 0,
+      };
+    }
+  }
+  return { scores, stats };
+}
+
+// Postgres DATEs come back as full timestamps; the date input wants YYYY-MM-DD.
+export function toDateInput(value) {
+  if (!value) return new Date().toLocaleDateString("en-CA");
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  return new Date(value).toLocaleDateString("en-CA");
+}
+
+export default function RoundEntry({ course, courseId, osmName, initialRound = null }) {
   const holes = course?.scorecard ?? [];
   const teeBoxes = course?.teeBoxes ?? [];
   const navigate = useNavigate();
+  const editing = initialRound != null;
 
-  const [tee, setTee] = useState(teeBoxes[0]?.tee ?? "");
-  const [scores, setScores] = useState({}); // { [holeNumber]: strokes }
-  const [stats, setStats] = useState({}); // { [holeNumber]: { putts?, fairway?, gir?, penalty? } }
-  const [trackStats, setTrackStats] = useState(true);
+  const [initial] = useState(() => stateFromHoles(initialRound?.holes));
+  const [tee, setTee] = useState(initialRound?.tee_name ?? teeBoxes[0]?.tee ?? "");
+  const [scores, setScores] = useState(initial.scores); // { [holeNumber]: strokes }
+  const [stats, setStats] = useState(initial.stats); // { [holeNumber]: { putts?, fairway?, gir?, penalty? } }
+  const [trackStats, setTrackStats] = useState(
+    editing ? (initialRound.holes ?? []).some(h => h.putts != null) : true
+  );
   const [current, setCurrent] = useState(0); // index into holes
-  const [datePlayed, setDatePlayed] = useState(() => new Date().toLocaleDateString("en-CA")); // YYYY-MM-DD
+  const [datePlayed, setDatePlayed] = useState(() => toDateInput(initialRound?.date_played)); // YYYY-MM-DD
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
@@ -49,10 +82,9 @@ export default function RoundEntry({ course, courseId, osmName }) {
     setStats(prev => ({ ...prev, [holeNumber]: { ...prev[holeNumber], ...patch } }));
   }
 
-  // Button taps record the score and move to the next hole.
+  // Button taps only record the score; moving on is a separate tap.
   function tapScore(value) {
     setScore(hole.Hole, value);
-    if (value != null && current < holes.length - 1) setCurrent(current + 1);
   }
 
   const played = holes.filter(h => scores[h.Hole] != null);
@@ -76,13 +108,16 @@ export default function RoundEntry({ course, courseId, osmName }) {
     setSaving(true);
     setSaveError(null);
     const box = teeBoxes.find(t => t.tee === tee);
+    // When editing a round whose course isn't cached, keep the rating it was saved with.
+    const keepSaved = editing && tee === (initialRound.tee_name ?? "");
     const body = {
       course_id: courseId ?? null,
       course_name: osmName, // the name the user picked in search, not ryzegolf's
       tee_name: tee || null,
-      course_rating: box?.handicap ?? null, // ryzegolf calls the rating "handicap"
-      slope_rating: box?.slope ?? null,
+      course_rating: box?.handicap ?? (keepSaved ? initialRound.course_rating : null), // ryzegolf calls the rating "handicap"
+      slope_rating: box?.slope ?? (keepSaved ? initialRound.slope_rating : null),
       date_played: datePlayed,
+      notes: initialRound?.notes ?? null, // PUT replaces the whole row, so carry notes over
       holes: played.map(h => {
         const s = statsFor(h, stats);
         return {
@@ -97,8 +132,9 @@ export default function RoundEntry({ course, courseId, osmName }) {
       }),
     };
     try {
-      const res = await fetch(`${API_URL}/api/rounds`, {
-        method: "POST",
+      const url = editing ? `${API_URL}/api/rounds/${initialRound.id}` : `${API_URL}/api/rounds`;
+      const res = await fetch(url, {
+        method: editing ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -107,7 +143,7 @@ export default function RoundEntry({ course, courseId, osmName }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? `Save failed (${res.status})`);
-      navigate("/");
+      navigate(editing ? `/rounds/${initialRound.id}` : "/");
     } catch (e) {
       setSaveError(e.message);
       setSaving(false);
@@ -207,7 +243,7 @@ export default function RoundEntry({ course, courseId, osmName }) {
           onClick={saveRound}
           disabled={!canSave || saving}
         >
-          {saving ? "Saving..." : "Add Round"}
+          {saving ? "Saving..." : editing ? "Save Changes" : "Add Round"}
         </button>
       </div>
 

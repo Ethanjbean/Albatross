@@ -6,11 +6,11 @@ const BASE_BTN =
   "rounded-xl border-2 px-4 py-4 text-lg font-semibold transition active:scale-95";
 
 /**
- * One hole at a time: tap Birdie / Par / Bogey, or Other for any number.
- * onScore(value) records the score; the parent decides whether to advance.
+ * One hole at a time: tap Birdie / Par / Bogey / Double, or More for any number.
+ * onScore(value) records the score. Tapping a score does NOT advance; use the
+ * arrows or the "Next hole" button, so a mis-tap is easy to fix.
  *
- * When trackStats is on, putts / fairway / GIR / penalty sit above the score
- * buttons, so you set them first and the score tap moves you to the next hole.
+ * When trackStats is on, putts / fairway / GIR / penalty sit above the score buttons.
  * `stats` is this hole's current values (presets + edits); onStatChange(patch) updates them.
  */
 export default function HoleEntry({
@@ -27,6 +27,7 @@ export default function HoleEntry({
     { label: "Birdie", value: par - 1, idle: "border-fairway-light bg-white text-fairway hover:bg-fairway-light", on: "border-fairway bg-fairway text-white" },
     { label: "Par", value: par, idle: "border-line bg-white text-fairway-dark hover:bg-fairway-hover", on: "border-fairway-dark bg-fairway-dark text-white" },
     { label: "Bogey", value: par + 1, idle: "border-amber-200 bg-white text-amber-700 hover:bg-amber-50", on: "border-amber-500 bg-amber-500 text-white" },
+    { label: "Double", value: par + 2, idle: "border-red-200 bg-white text-red-700 hover:bg-red-50", on: "border-red-600 bg-red-600 text-white" },
   ];
   const isQuick = quick.some(q => q.value === score);
 
@@ -110,7 +111,7 @@ export default function HoleEntry({
         </div>
       )}
 
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-5">
         {quick.map(q => (
           <button
             key={q.label}
@@ -128,13 +129,13 @@ export default function HoleEntry({
           onClick={() => setShowOther(o => !o)}
           className={`${BASE_BTN} ${
             score != null && !isQuick
-              ? "border-red-500 bg-red-500 text-white"
+              ? "border-red-800 bg-red-800 text-white"
               : showOther
               ? "border-fairway-dark bg-white text-fairway-dark"
               : "border-line bg-white text-muted hover:bg-fairway-hover"
           }`}
         >
-          Other
+          More
           <span className="block text-sm font-normal opacity-70">
             {score != null && !isQuick ? score : "…"}
           </span>
@@ -161,7 +162,7 @@ export default function HoleEntry({
       )}
 
       {score != null && (
-        <div className="mt-4 text-center">
+        <div className="mt-4 flex items-center justify-center gap-6">
           <button
             type="button"
             onClick={() => onScore(null)}
@@ -169,6 +170,15 @@ export default function HoleEntry({
           >
             Clear hole {hole.Hole}
           </button>
+          {index < total - 1 && (
+            <button
+              type="button"
+              onClick={() => { setShowOther(false); onNext(); }}
+              className="btn btn-primary flex items-center gap-1"
+            >
+              Next hole <ChevronRight size={18} />
+            </button>
+          )}
         </div>
       )}
 

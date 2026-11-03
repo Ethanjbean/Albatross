@@ -4,12 +4,12 @@ export const teeName = s => (s ?? "").replace(/_/g, " ");
 export const yardsFor = (hole, tee) =>
   Object.values(hole?.tees ?? {}).find(t => teeName(t.color) === teeName(tee))?.yards;
 
-// Per-hole stat presets: 2 putts, fairway hit, green in regulation, no penalty.
+// Per-hole stat presets: 2 putts, fairway missed, green missed, no penalty.
 // Par 3s have no fairway to hit, so fairway is null there and isn't counted.
 export const defaultStats = hole => ({
   putts: 2,
-  fairway: hole?.Par >= 4 ? true : null,
-  gir: true,
+  fairway: hole?.Par >= 4 ? false : null,
+  gir: false,
   penalty: false,
 });
 

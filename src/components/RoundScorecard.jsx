@@ -89,7 +89,10 @@ export default function RoundScorecard() {
             {round.course_rating != null && ` · ${round.course_rating} / ${round.slope_rating}`}
           </p>
         </div>
-        <button className="btn-primary" onClick={() => navigate("/roundinfo")}>← Back to rounds</button>
+        <div className="flex gap-3">
+          <button className="btn-primary" onClick={() => navigate(`/rounds/${round.id}/edit`)}>Edit round</button>
+          <button className="btn-primary" onClick={() => navigate("/roundinfo")}>← Back to rounds</button>
+        </div>
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
