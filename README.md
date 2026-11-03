@@ -29,7 +29,7 @@ The result is that API usage scales with the number of *new courses* people play
 - Frontend: React 19 + Vite, react-router-dom, Tailwind v4, lucide-react, recharts. Source in src/, components in src/components
 - Backend: Node (>=22) + Express 5, entry point golf_backend/server.js. Routes in golf_backend/src/routes (auth, courses, rounds, profiles, targets), middleware in golf_backend/src/routes/middleware (auth.js, rateLimit.js)
 - Database: PostgreSQL via pg, database name golf_backend. Schema lives in golf_backend/src/db/schema.sql. Use that as the source of truth for the schema section
-- Env: golf_backend/.env.example lists the required variables. Point setup instructions there. .env is gitignored
+
 
 **Features**
 - Auth: /register and /login, bcrypt-hashed passwords, JWT tokens, rate limiting via express-rate-limit
