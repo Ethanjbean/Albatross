@@ -32,7 +32,7 @@
   /* ---------- Page ---------- */
   .backdrop-primary {
     /* pb-28 keeps content clear of the fixed bottom nav */
-    @apply min-h-screen bg-paper p-8 pb-28 font-body text-ink;
+    @apply min-h-screen bg-paper p-4 pb-28 font-body text-ink sm:p-8 sm:pb-28;
   }
   .backdrop-augusta {
     @apply min-h-screen bg-paper pb-28 font-body text-ink;
@@ -48,7 +48,7 @@
   }
   /* Big number inside a stat card */
   .stat-augusta {
-    @apply mt-2 font-display text-5xl font-semibold tabular-nums text-fairway-dark;
+    @apply mt-1 font-display text-3xl font-semibold tabular-nums text-fairway-dark sm:mt-2 sm:text-5xl;
   }
 
   /* ---------- Surfaces ---------- */

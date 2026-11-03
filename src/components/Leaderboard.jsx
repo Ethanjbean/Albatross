@@ -100,11 +100,11 @@ export default function Leaderboard() {
 
         {data && !error && (
           <>
-            <div className={`card-augusta overflow-hidden transition-opacity ${loading ? "opacity-60" : ""}`}>
+            <div className={`card-augusta overflow-x-auto transition-opacity ${loading ? "opacity-60" : ""}`}>
               <table className="w-full text-left">
                 <thead className="bg-fairway-dark font-display text-sm uppercase tracking-wider text-paper">
                   <tr>
-                    <th className="w-20 px-4 py-3">Rank</th>
+                    <th className="w-14 px-4 py-3 sm:w-20">Rank</th>
                     <th className="px-4 py-3">Player</th>
                     <th className={`px-4 py-3 text-right ${sort === "handicap" ? "text-gold" : ""}`}>Index</th>
                     <th className={`px-4 py-3 text-right ${sort === "rounds" ? "text-gold" : ""}`}>Rounds</th>

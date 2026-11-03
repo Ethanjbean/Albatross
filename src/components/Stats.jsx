@@ -52,16 +52,16 @@ export default function Stats({ user, onLogout }) {
 
     return (
         <div className="backdrop-primary">
-            <div className="grid grid-cols-3 gap-8 mb-8">
-                <div className="card-augusta p-6 flex flex-col items-center justify-center text-center">
+            <div className="grid grid-cols-3 gap-2 sm:gap-8 mb-8">
+                <div className="card-augusta p-3 sm:p-6 flex flex-col items-center justify-center text-center">
                     <p className="label-augusta">Handicap (est.)</p>
                     <p className="stat-augusta">{stats.handicap_index ?? "--"}</p>
                 </div>
-                <div className="card-augusta p-6 flex flex-col items-center justify-center text-center">
+                <div className="card-augusta p-3 sm:p-6 flex flex-col items-center justify-center text-center">
                     <p className="label-augusta">Rounds Played</p>
                     <p className="stat-augusta">{stats.rounds_played}</p>
                 </div>
-                <div className="card-augusta p-6 flex flex-col items-center justify-center text-center">
+                <div className="card-augusta p-3 sm:p-6 flex flex-col items-center justify-center text-center">
                     <p className="label-augusta">Avg Score</p>
                     <p className="stat-augusta">{stats.avg_score}</p>
                 </div>

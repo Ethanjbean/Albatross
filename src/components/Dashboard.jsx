@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
-import { useNavigate, NavLink  } from "react-router-dom"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { Home, LogOutIcon, PlusIcon, PlusCircle, Trophy, BarChart3, User } from "lucide-react";
+import { useNavigate } from "react-router-dom"
+import { LogOutIcon, PlusIcon } from "lucide-react";
 import GoalsCard from "./GoalsCard";
+import { niceAxis, TrendChart } from "./Statcharts";
 import { API_URL } from '../config'
 
 
@@ -105,14 +105,23 @@ export default function Dashboard({ user, onLogout }) {
 }, [])
 
 
-console.log("rounds state:", rounds);
-console.log("scoreHistory mapped:", rounds.map(r => ({ date: r.date_played, score: r.total_score })));
+  // Oldest -> newest for the trend line (copy, so the Recent Rounds table keeps its order).
+  const trend = [...rounds]
+    .filter(r => r.total_score != null)
+    .sort((a, b) => new Date(a.date_played) - new Date(b.date_played))
+    .map(r => ({ date: r.date_played, course: r.course_name, score: r.total_score }));
+  const trendScores = trend.map(t => t.score);
+  const goal = targets.score_goal;
+  const scoreAxis = trend.length
+    ? niceAxis(Math.min(...trendScores, goal ?? Infinity), Math.max(...trendScores, goal ?? -Infinity), 2)
+    : null;
+  const trendAvg = trend.length ? trendScores.reduce((a, b) => a + b, 0) / trend.length : null;
   return (
     <div className="backdrop-primary">
 
       {/* Quick Actions Header */}
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between gap-4 mb-8">
         <h1 className="heading-augusta text-3xl">Welcome back, {user.username}</h1>
          <button
             onClick={onLogout}
@@ -122,47 +131,40 @@ console.log("scoreHistory mapped:", rounds.map(r => ({ date: r.date_played, scor
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-            <div className="card-augusta p-6 flex flex-col items-center justify-center text-center">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8">
+            <div className="card-augusta p-3 sm:p-6 flex flex-col items-center justify-center text-center">
                 <p className="label-augusta">Handicap (est.)</p>
                 <p className="stat-augusta">{stats.handicap_index ?? "--"}</p>
             </div>
-            <div className="card-augusta p-6 flex flex-col items-center justify-center text-center">
+            <div className="card-augusta p-3 sm:p-6 flex flex-col items-center justify-center text-center">
                 <p className="label-augusta">Best Score</p>
                 <p className="stat-augusta">{stats.best_score}</p>
             </div>
-            <div className="card-augusta p-6 flex flex-col items-center justify-center text-center">
+            <div className="card-augusta p-3 sm:p-6 flex flex-col items-center justify-center text-center">
                 <p className="label-augusta">Avg Score</p>
                 <p className="stat-augusta">{stats.avg_score}</p>
             </div>
       </div>
       <div className="grid grid-cols-1 gap-4 mb-4">
-  <div className="card-augusta p-6">
-    <p className="label-augusta mb-4">Score Trend</p>
-    <div className="h-64">
-  {rounds.length === 0 ? (
-    <p className="text-muted text-sm">No rounds logged yet.</p>
-  ) : (
-    
-<ResponsiveContainer width="100%" height="100%">
-  <LineChart data={rounds.map(r => ({ date: new Date(r.date_played).toLocaleDateString(), score: r.total_score }))}>
-    <CartesianGrid strokeDasharray="3 3" stroke="#D9DED9" />
-    <XAxis dataKey="date" tick={{ fontSize: 12 }}  />
-    <YAxis tick={{ fontSize: 12 }} domain={['dataMin - 3', 'dataMax + 3' ]}/>
-    <Tooltip />
-    <ReferenceLine
-      y={targets.score_goal}
-      ifOverflow="extendDomain"
-      stroke="#C9A646"
-      strokeDasharray="4 4"
-      label={{value: `Goal: ${targets.score_goal}`, position: 'insideTopRight', fill: '#C9A646', fontSize: 12}}
-    />
-    <Line type="monotone" dataKey="score" stroke="#1E6B4E" strokeWidth={2} dot={true}  />
-  </LineChart>
-</ResponsiveContainer>
-  )}
-</div>
-  </div>
+        <div className="card-augusta min-w-0 p-4 sm:p-5">
+          <div className="mb-2 flex items-baseline justify-between">
+            <p className="label-augusta">Score Trend</p>
+            {trendAvg != null && <span className="text-xs text-muted">avg {trendAvg.toFixed(1)}</span>}
+          </div>
+          {trend.length === 0 ? (
+            <p className="text-sm text-muted">No rounds logged yet.</p>
+          ) : (
+            <TrendChart
+              className="h-48 sm:h-64"
+              data={trend}
+              dataKey="score"
+              stroke="#1E6B4E"
+              domain={scoreAxis.domain}
+              ticks={scoreAxis.ticks}
+              goal={goal}
+            />
+          )}
+        </div>
 </div>
      <div className="grid grid-cols-1 mb-4">
       <button className="btn-primary" onClick={() => navigate("/start-round")}>
@@ -175,17 +177,18 @@ console.log("scoreHistory mapped:", rounds.map(r => ({ date: r.date_played, scor
 
 
       {/* Recent Rounds + Goals */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
 
         {/* Recent Rounds */}
         <div className="card-augusta p-6">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
             <h2 className="heading-augusta text-xl">Recent Rounds</h2>
             <button
             className="btn-primary"
             onClick = {() => navigate("/roundinfo")}
             > View All Scores</button>
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left border-b border-line label-augusta">
@@ -215,6 +218,7 @@ console.log("scoreHistory mapped:", rounds.map(r => ({ date: r.date_played, scor
               </tbody>
               
           </table>
+          </div>
         </div>
 
         {/* Goals */}
@@ -224,30 +228,6 @@ console.log("scoreHistory mapped:", rounds.map(r => ({ date: r.date_played, scor
         
 
       </div>
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-line shadow-[0_-2px_10px_rgba(11,61,46,0.06)]">
-  <div className="grid grid-cols-5 max-w-2xl mx-auto">
-    <button onClick={() => navigate("/")} className="flex flex-col items-center justify-center py-3 gap-1 text-fairway hover:text-fairway transition-colors">
-      <Home size={20} />
-      <span className="text-xs font-medium">Dashboard</span>
-    </button>
-    <button onClick={() => navigate("/log-round")} className="flex flex-col items-center justify-center py-3 gap-1 text-muted hover:text-fairway transition-colors">
-      <PlusCircle size={20} />
-      <span className="text-xs font-medium">Log Round</span>
-    </button>
-    <button onClick={() => navigate("/leaderboard")} className="flex flex-col items-center justify-center py-3 gap-1 text-muted hover:text-fairway transition-colors">
-      <Trophy size={20} />
-      <span className="text-xs font-medium">Leaderboard</span>
-    </button>
-    <button onClick={() => navigate("/roundinfo")} className="flex flex-col items-center justify-center py-3 gap-1 text-muted hover:text-fairway transition-colors">
-      <BarChart3 size={20} />
-      <span className="text-xs font-medium">Stats</span>
-    </button>
-    <button onClick={() => navigate("/profile")} className="flex flex-col items-center justify-center py-3 gap-1 text-muted hover:text-fairway transition-colors">
-      <User size={20} />
-      <span className="text-xs font-medium">Profile</span>
-    </button>
-  </div>
-</div>
 
     </div>
   )

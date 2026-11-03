@@ -18,7 +18,7 @@ export default function Footer() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-line shadow-[0_-2px_10px_rgba(11,61,46,0.06)]">
-      <div className="grid grid-cols-5 max-w-2xl mx-auto">
+      <div className="grid grid-cols-4 max-w-2xl mx-auto">
         {navItems.map(({ path, label, icon: Icon }) => {
           // Routes are case-insensitive, so compare lowercase. "/" only matches exactly.
           const here = location.pathname.toLowerCase();
