@@ -187,7 +187,7 @@ function StatCard({ config, rounds }) {
  
   return (
     <div className="card-augusta min-w-0 p-4 sm:p-5">
-      <div className="flex items-baseline justify-between mb-2">
+      <div className="flex items-baseline justify-between mb-4">
         <p className="label-augusta">
           {config.label}
         </p>
