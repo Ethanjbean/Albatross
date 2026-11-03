@@ -13,6 +13,7 @@ import RoundScorecard from "./components/RoundScorecard";
 import EditRound from "./components/EditRound";
 import Leaderboard from "./components/Leaderboard";
 import DemoBanner from "./components/DemoBanner";
+import Profile from "./components/Profile";
 import { Star } from "lucide-react";
 
 // Rebuild the logged-in user from the saved JWT so a page refresh doesn't log
@@ -85,6 +86,9 @@ export default function App(){
       }/>
       <Route path="/stats" element ={
         user ? <Stats /> : <Navigate to="/" />
+      }/>
+      <Route path="/profile" element={
+        user ? <Profile /> : <Navigate to="/" />
       }/>
       <Route path="/leaderboard" element={
         user ? <Leaderboard /> : <Navigate to="/" />

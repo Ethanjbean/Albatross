@@ -69,18 +69,19 @@ export default function Stats({ user, onLogout }) {
             </div>
 
             <RoundStatsCharts rounds={rounds} />
-        
-            <div className="grid grid-cols-3 gap-2 sm:gap-8 mt-8">
+        <h2 className="heading-augusta text-xl mt-8">Scoring Averages</h2>
+            <div className="grid grid-cols-3 gap-2 sm:gap-8 mt-4">
+            
                 <div className="card-augusta p-3 sm:p-6 flex flex-col items-center justify-center text-center">
-                    <p className="label-augusta">Par 3 Scoring Average</p>
+                    <p className="label-augusta">Par 3</p>
                     <p className="stat-augusta">{stats.par3_avg ?? "--"}</p>
                 </div>
                 <div className="card-augusta p-3 sm:p-6 flex flex-col items-center justify-center text-center">
-                    <p className="label-augusta">Par 4 Scoring Average</p>
+                    <p className="label-augusta">Par 4</p>
                     <p className="stat-augusta">{stats.par4_avg ?? "--"}</p>
                 </div>
                 <div className="card-augusta p-3 sm:p-6 flex flex-col items-center justify-center text-center">
-                    <p className="label-augusta">Par 5 Scoring Average</p>
+                    <p className="label-augusta">Par 5</p>
                     <p className="stat-augusta">{stats.par5_avg ?? "--"}</p>
                 </div>
             </div>

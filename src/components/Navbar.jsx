@@ -6,7 +6,7 @@ const navItems = [
   { path: "/", label: "Dashboard", icon: Home },
   { path: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { path: "/Stats", label: "Stats", icon: BarChart3 },
-  { path: "/Target", label: "Profile", icon: User },
+  { path: "/profile", label: "Profile", icon: User },
 ];
 
 const hiddenPaths = ["/login", "/register"];
