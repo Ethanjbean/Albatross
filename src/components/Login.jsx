@@ -26,6 +26,23 @@ export default function Login({onLogin, onSwitch}) {
       alert('Could not connect to server')
     }
   }
+  // "Try the demo": no account needed. The backend hands back a short-lived,
+  // read-only token for the shared demo account.
+  const handleDemo = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/demo`, { method: 'POST' })
+      const data = await res.json()
+      if (data.token) {
+        localStorage.setItem('token', data.token)
+        onLogin({ username: data.username, demo: true })
+      } else {
+        alert(data.error)
+      }
+    } catch {
+      alert('Could not connect to server')
+    }
+  }
+
   return (
 
   <div className="min-h-screen bg-fairway-dark flex items-center justify-center p-4">
@@ -59,6 +76,21 @@ export default function Login({onLogin, onSwitch}) {
       >
       Sign In
       </button>
+
+      <div className="flex items-center gap-3 mb-4">
+        <span className="h-px flex-1 bg-line" />
+        <span className="text-xs uppercase tracking-wider text-muted">or</span>
+        <span className="h-px flex-1 bg-line" />
+      </div>
+
+      <button
+        onClick={handleDemo}
+        className="btn-secondary w-full mb-1"
+      >
+      Try the demo
+      </button>
+      <p className="text-center text-xs text-muted mb-4">No account needed</p>
+
       <p className="text-center text-sm text-muted">
           Don't have an account?{' '}
         <span onClick={onSwitch} className="text-fairway cursor-pointer font-semibold">

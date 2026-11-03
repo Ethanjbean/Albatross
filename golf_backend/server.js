@@ -21,6 +21,10 @@ if (missing.length) {
 
 const app = express()
 
+// Railway (like most hosts) sits behind one proxy. Trusting it makes req.ip
+// the visitor's real IP, which the per-IP demo rate limit depends on.
+app.set('trust proxy', 1)
+
 // CORS_ORIGIN: comma-separated sites allowed to call the API, e.g.
 // https://albatross.onrender.com. Unset = any origin (fine locally, and not
 // needed at all once Express serves the frontend from the same site).

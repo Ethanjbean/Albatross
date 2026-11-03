@@ -1,20 +1,10 @@
 import express from 'express'
-import jwt from 'jsonwebtoken'
 import pool from '../db/index.js'
+// Shared middleware (was a local copy here), so targets get the demo
+// read-only check too.
+import { verifyToken } from './middleware/auth.js'
 
 const router = express.Router()
-
-const verifyToken = (req, res, next) => {
-  const token = req.headers['authorization']
-  if (!token) return res.status(401).json({ error: 'No token provided' })
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    req.user = decoded
-    next()
-  } catch (err) {
-    res.status(401).json({ error: 'Invalid token' })
-  }
-}
 
 // GET targets for logged in user
 router.get('/', verifyToken, async (req, res) => {

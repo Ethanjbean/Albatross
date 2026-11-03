@@ -27,3 +27,5 @@ process.env.RYZE_HOST = 'ryze.test'
 // High limits by default; the rate-limit tests lower these before loading the app.
 process.env.LOOKUP_LIMIT_PER_USER = '1000'
 process.env.LOOKUP_LIMIT_GLOBAL_DAILY = '1000'
+process.env.DEMO_LIMIT_PER_IP = '1000'
+delete process.env.DEMO_USERNAME // tests assume the default "demo"

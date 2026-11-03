@@ -12,6 +12,7 @@ import StartRound from "./components/Start-round";
 import RoundScorecard from "./components/RoundScorecard";
 import EditRound from "./components/EditRound";
 import Leaderboard from "./components/Leaderboard";
+import DemoBanner from "./components/DemoBanner";
 import { Star } from "lucide-react";
 
 // Rebuild the logged-in user from the saved JWT so a page refresh doesn't log
@@ -25,10 +26,10 @@ function userFromToken() {
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
     const payload = JSON.parse(new TextDecoder().decode(bytes));
     if (payload.exp && payload.exp * 1000 < Date.now()) {
-      localStorage.removeItem("token"); // expired (tokens last 7 days)
+      localStorage.removeItem("token"); // expired (7 days, or 1 hour for the demo)
       return null;
     }
-    return { username: payload.username };
+    return { username: payload.username, demo: payload.demo === true };
   } catch {
     return null; // missing, garbled, or storage blocked
   }
@@ -46,6 +47,13 @@ export default function App(){
     localStorage.removeItem("token")
     setUser(null)
   }
+
+  // From the demo banner: leave the demo and land on the register form.
+  const handleDemoSignUp = () => {
+    handleLogout()
+    setShowRegister(true)
+  }
+
   const getAuthScreen = () => {
     if(showRegister) {
       return <Register onSwitch={() => setShowRegister(false)} />
@@ -55,6 +63,7 @@ export default function App(){
 
   return (
     <>
+    {user?.demo && <DemoBanner onExit={handleLogout} onSignUp={handleDemoSignUp} />}
     <Routes>
       <Route path="/" element={
         user ? <Dashboard user={user} onLogout={handleLogout} /> : getAuthScreen() 

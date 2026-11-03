@@ -25,3 +25,14 @@ export const globalDaily = rateLimit({
   legacyHeaders: false,
   message: { error: 'Course lookup is at its daily limit. Try again tomorrow.' },
 });
+
+// "Try the demo" button: per IP, 20 per 15 minutes (override with DEMO_LIMIT_PER_IP).
+// Keyed by IP because there's no user yet; needs `trust proxy` set in server.js
+// so req.ip is the visitor, not the host's load balancer.
+export const demoLogin = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: Number(process.env.DEMO_LIMIT_PER_IP) || 20,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'Too many demo sessions from here. Try again in a few minutes.' },
+});

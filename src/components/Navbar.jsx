@@ -28,7 +28,7 @@ export default function Footer() {
             key={path}
             onClick={() => navigate(path)}
             aria-current={active ? "page" : undefined}
-            className={`relative flex flex-col items-center justify-center py-3 gap-1 transition-colors ${
+            className={`relative flex flex-col items-center justify-center py-3 gap-3 transition-colors ${
               active ? "text-fairway-dark" : "text-muted hover:text-fairway"
             }`}
           >
