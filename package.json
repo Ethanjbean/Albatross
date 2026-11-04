@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "start": "node golf_backend/server.js",
+    "seed:demo": "node golf_backend/src/scripts/seed-demo.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "node --test --test-concurrency=1 \"golf_backend/test/*.test.js\""

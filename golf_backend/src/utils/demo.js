@@ -7,6 +7,7 @@
 import bcrypt from 'bcrypt'
 import { randomBytes } from 'node:crypto'
 import pool from '../db/index.js'
+import { seedDemoRounds } from './demoRounds.js'
 
 export const DEMO_USERNAME = process.env.DEMO_USERNAME || 'demo'
 
@@ -20,39 +21,54 @@ export const DEMO_READ_ONLY_MESSAGE =
 export const isDemoUsername = (name) =>
   typeof name === 'string' && name.trim().toLowerCase() === DEMO_USERNAME.toLowerCase()
 
-// Returns the demo user's id, creating the account (with default targets and
-// a profile, same as /register) the first time it's needed. The password is
-// random and thrown away: the demo account can only be entered through /demo.
+// Any fixed number works; it just has to be the same for every caller.
+const DEMO_SETUP_LOCK = 31_100_131
+
+// Returns the demo user's id, creating the account (with default targets, a
+// profile and sample rounds) the first time it's needed. If the account
+// exists but has no rounds (made before seeding existed, or wiped by hand),
+// it gets refilled. The password is random and thrown away: the demo account
+// can only be entered through /demo.
 export async function ensureDemoUser() {
-  const existing = await pool.query('SELECT id FROM users WHERE username = $1', [DEMO_USERNAME])
-  if (existing.rows[0]) return existing.rows[0].id
+  // Fast path for every click after the first: one query, no transaction.
+  const existing = await pool.query(
+    `SELECT u.id, EXISTS (SELECT 1 FROM rounds r WHERE r.user_id = u.id) AS has_rounds
+       FROM users u WHERE u.username = $1`,
+    [DEMO_USERNAME]
+  )
+  if (existing.rows[0]?.has_rounds) return existing.rows[0].id
 
   const hashed = await bcrypt.hash(randomBytes(32).toString('hex'), 10)
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
-    // ON CONFLICT: two visitors clicking at the same moment both land here.
-    const inserted = await client.query(
-      `INSERT INTO users (username, password) VALUES ($1, $2)
-       ON CONFLICT (username) DO NOTHING
-       RETURNING id`,
-      [DEMO_USERNAME, hashed]
-    )
-    if (!inserted.rows[0]) {
-      await client.query('ROLLBACK')
-      const again = await pool.query('SELECT id FROM users WHERE username = $1', [DEMO_USERNAME])
-      return again.rows[0].id
+    // Two visitors clicking at the same moment both land here. The lock makes
+    // the second one wait, then see the first one's finished account, so the
+    // demo never ends up with 40 rounds. It releases itself at COMMIT/ROLLBACK.
+    await client.query('SELECT pg_advisory_xact_lock($1)', [DEMO_SETUP_LOCK])
+
+    let id = (await client.query('SELECT id FROM users WHERE username = $1', [DEMO_USERNAME])).rows[0]?.id
+    if (!id) {
+      id = (await client.query(
+        'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id',
+        [DEMO_USERNAME, hashed]
+      )).rows[0].id
+      await client.query(
+        `INSERT INTO targets (user_id, score_goal, putt_goal, fairway_goal, green_goal)
+         VALUES ($1, 90, 36, 9, 9)`,
+        [id]
+      )
     }
-    const id = inserted.rows[0].id
+    // Upsert: an older demo account may be missing its profile row.
     await client.query(
-      `INSERT INTO targets (user_id, score_goal, putt_goal, fairway_goal, green_goal)
-       VALUES ($1, 90, 36, 9, 9)`,
-      [id]
-    )
-    await client.query(
-      'INSERT INTO profiles (user_id, display_name) VALUES ($1, $2)',
+      `INSERT INTO profiles (user_id, display_name) VALUES ($1, $2)
+       ON CONFLICT (user_id) DO UPDATE SET display_name = COALESCE(profiles.display_name, EXCLUDED.display_name)`,
       [id, 'Demo Golfer']
     )
+
+    const hasRounds = (await client.query('SELECT 1 FROM rounds WHERE user_id = $1 LIMIT 1', [id])).rows.length
+    if (!hasRounds) await seedDemoRounds(client, id)
+
     await client.query('COMMIT')
     return id
   } catch (err) {
