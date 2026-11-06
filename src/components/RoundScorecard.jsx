@@ -126,7 +126,7 @@ export default function RoundScorecard() {
       {round.notes && (
         <div className="card-augusta mt-6 p-6">
           <p className="label-augusta mb-2">Notes</p>
-          <p className="text-ink">{round.notes}</p>
+          <p className="whitespace-pre-wrap break-words text-ink">{round.notes}</p>
         </div>
       )}
     </div>

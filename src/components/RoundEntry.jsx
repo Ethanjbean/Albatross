@@ -59,6 +59,7 @@ export default function RoundEntry({ course, courseId, osmName, initialRound = n
   );
   const [current, setCurrent] = useState(0); // index into holes
   const [datePlayed, setDatePlayed] = useState(() => toDateInput(initialRound?.date_played)); // YYYY-MM-DD
+  const [notes, setNotes] = useState(initialRound?.notes ?? "");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
@@ -117,7 +118,7 @@ export default function RoundEntry({ course, courseId, osmName, initialRound = n
       course_rating: box?.handicap ?? (keepSaved ? initialRound.course_rating : null), // ryzegolf calls the rating "handicap"
       slope_rating: box?.slope ?? (keepSaved ? initialRound.slope_rating : null),
       date_played: datePlayed,
-      notes: initialRound?.notes ?? null, // PUT replaces the whole row, so carry notes over
+      notes: notes.trim() || null,
       holes: played.map(h => {
         const s = statsFor(h, stats);
         return {
@@ -234,10 +235,24 @@ export default function RoundEntry({ course, courseId, osmName, initialRound = n
             className="rounded-lg border border-line bg-white px-3 py-2"
           />
         </label>
+
+        <label className="block text-sm text-ink">
+          <span className="label-augusta mb-1 block">Notes</span>
+          <textarea
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            rows={3}
+            maxLength={1000}
+            placeholder="Conditions, what worked, what didn't..."
+            className="w-full resize-y rounded-lg border border-line bg-white px-3 py-2"
+          />
+        </label>
+
         {saveError && <p className="text-sm text-danger">{saveError}</p>}
         {!canSave && played.length > 0 && (
           <p className="text-sm text-muted">Enter all 9 or 18 holes to save.</p>
         )}
+        
         <button
           className="btn btn-primary w-full disabled:opacity-50"
           onClick={saveRound}

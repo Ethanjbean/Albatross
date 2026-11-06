@@ -70,10 +70,14 @@ The result is that API usage scales with the number of *new courses* people play
 -[x] Handicap Calculation
 -[x] Track GIR, Fairways, Pens, and Scores
 -[x] Leaderboard tracks users
+-[] Add pages to view rounds when rounds > 20
+-[] Display notes underneath view scorecards
 -[] mobile optimization
 -[] Handicap trends, score trends on par 3/5s, average penalties a round.
 -[] Implement a challenge mode where users can compete with eachother in different game modes, skins, wolf, match play, gross/net, etc.
 -[] AI insights to what users can do to improve their scores, should they focus on putting? off the Tee? scoring on par 3's? avoiding penalties?
+
+
 
 
 

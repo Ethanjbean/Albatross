@@ -111,7 +111,14 @@ export default function Roundinfo() {
                             ) : (
                                 rounds.map((round) => (
                                     <tr key={round.id} className="group hover:bg-fairway-hover transition-colors">
-    <td className="px-6 py-4 font-medium text-ink">{round.course_name}</td>
+    <td className="px-6 py-4">
+        <p className="font-medium text-ink">{round.course_name}</p>
+        {round.notes && (
+            <p className="mt-0.5 max-w-xs truncate text-xs text-muted" title={round.notes}>
+                {round.notes}
+            </p>
+        )}
+    </td>
     <td className="px-6 py-4 text-muted">{new Date(round.date_played).toLocaleDateString()}</td>
     <td className="px-6 py-4">
         <span className={`font-bold transition-colors ${getTextColor(round.total_score, targets.score_goal)}`}>
